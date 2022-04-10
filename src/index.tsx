@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom"
 import * as esbuild from 'esbuild-wasm'
 import { unpkgPathPlugin } from "./plugin/unpkg-path-plugin";
+import { fileCachePlugin } from "./plugin/file-cache-plugin";
 
 const App = () => {
   const [text, setText] = useState('');
@@ -15,7 +16,7 @@ const App = () => {
   const startService = async () => {
       ref.current = await esbuild.startService({
         worker: true,
-        wasmURL: '/esbuild.wasm'
+        wasmURL: 'https://unpkg.com/esbuild-wasm@0.8.27/esbuild.wasm'
       })
   }
 
@@ -32,7 +33,7 @@ const App = () => {
      entryPoints: ['index.js'],
      bundle: true,
      write: false,
-     plugins: [unpkgPathPlugin(text)],
+     plugins: [unpkgPathPlugin(), fileCachePlugin(text)],
      define: {
        'process.env.NODE_ENV': '"production"',
        global: 'window'
