@@ -1,7 +1,12 @@
 import * as esbuild from 'esbuild-wasm';
 import axios from 'axios';
+import localforage from 'localforage';
 
-export const unpkgPathPlugin = () => {
+const forage = localforage.createInstance({
+  name: 'storeit'
+})
+
+export const unpkgPathPlugin = (input: string) => {
   return {
     name: 'unpkg-path-plugin',
     setup(build: esbuild.PluginBuild) {
@@ -20,7 +25,7 @@ export const unpkgPathPlugin = () => {
         
         if (args.path.includes('./') || args.path.includes('../')) {
           return {
-            path: new URL(args.path, args.importer+'/').href,
+            path: new URL(args.path, 'https://unpkg.com'+args.resolveDir+'/').href,
             namespace: 'a'
           }
         }
@@ -38,17 +43,27 @@ export const unpkgPathPlugin = () => {
         if (args.path === 'index.js') {
           return {
             loader: 'jsx',
-            contents: `
-              import message from 'medium-test-pkg';
-              console.log(message);
-            `,
+            contents: input,
           };
         }
-        const { data } = await axios.get(args.path);
-        return {
-          loader: 'jsx',
-          contents: data
+
+        const fromCache = await forage.getItem<esbuild.OnLoadResult>(args.path);
+
+        if (fromCache) {
+          return fromCache;
         }
+
+        const { data, request } = await axios.get(args.path);
+        console.log(request);
+        
+        const resolveDir = new URL('./', request.responseURL).pathname;
+        const result: esbuild.OnLoadResult = {
+          loader: 'jsx',
+          contents: data,
+          resolveDir
+        };
+        await forage.setItem(args.path, result)
+        return result;
       });
     },
   };
