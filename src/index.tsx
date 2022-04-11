@@ -6,8 +6,8 @@ import { fileCachePlugin } from "./plugin/file-cache-plugin";
 
 const App = () => {
   const [text, setText] = useState('');
-  const [code, setCode] = useState('');
   const ref = useRef<any>();
+  const iFrameRef = useRef<any>()
 
   useEffect(() => {
     startService();
@@ -42,15 +42,35 @@ const App = () => {
 
     console.log(result);
     
-    
-    setCode(result.outputFiles[0].text);
+    iFrameRef.current.contentWindow.postMessage(result.outputFiles[0].text, '*')
+    // setCode(result.outputFiles[0].text);
   }
+
+  const html = `
+  <html>
+    <head></head>
+    <body>
+      <div id="root"></div>
+      <script>
+        window.addEventListener('message', (event) => {
+          try {
+            eval(event.data);
+          } catch (err) {
+            const root = document.querySelector('#root');
+            root.innerHTML = '<div style="color: red;"><h4>Runtime Error</h4>' + err + '</div>';
+            console.error(err);
+          }
+        }, false);
+      </script>
+    </body>
+  </html>
+`;
 
   return <div>
     <textarea value={text} onChange={changeTheText}></textarea>
     <br />
     <button onClick={changeTheCode}>Submit</button>
-    <pre>{code}</pre>
+    <iframe ref={iFrameRef} title="compilcode" srcDoc={html}></iframe>
   </div>
 }
 
