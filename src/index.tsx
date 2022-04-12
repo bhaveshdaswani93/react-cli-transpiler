@@ -3,6 +3,7 @@ import ReactDOM from "react-dom"
 import * as esbuild from 'esbuild-wasm'
 import { unpkgPathPlugin } from "./plugin/unpkg-path-plugin";
 import { fileCachePlugin } from "./plugin/file-cache-plugin";
+import CodeEditor from './components/code-editor';
 
 const App = () => {
   const [text, setText] = useState('');
@@ -67,6 +68,9 @@ const App = () => {
 `;
 
   return <div>
+    <CodeEditor 
+      intialValue="const a = 1;"
+    />
     <textarea value={text} onChange={changeTheText}></textarea>
     <br />
     <button onClick={changeTheCode}>Submit</button>
