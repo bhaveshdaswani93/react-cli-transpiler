@@ -70,6 +70,12 @@ const App = () => {
   return <div>
     <CodeEditor 
       intialValue="const a = 1;"
+      onChange={(value: string | undefined) => { 
+        if (value) {
+          setText(value);
+        }
+
+       }}
     />
     <textarea value={text} onChange={changeTheText}></textarea>
     <br />
